@@ -32,15 +32,16 @@ public class DefaultDubboConfigBinder extends AbstractDubboConfigBinder {
 
     @Override
     public <C extends AbstractConfig> void bind(String prefix, C dubboConfig) {
+        //将dubboConfig包装成DataBinder
         DataBinder dataBinder = new DataBinder(dubboConfig);
-        // Set ignored*
+        //设置ignore属性
         dataBinder.setIgnoreInvalidFields(isIgnoreInvalidFields());
         dataBinder.setIgnoreUnknownFields(isIgnoreUnknownFields());
-        // Get properties under specified prefix from PropertySources
+        // 获得 prefix 开头的配置属性
         Map<String, Object> properties = getSubProperties(getPropertySources(), prefix);
-        // Convert Map to MutablePropertyValues
+        // 创建 MutablePropertyValues 对象
         MutablePropertyValues propertyValues = new MutablePropertyValues(properties);
-        // Bind
+        // 绑定配置属性到 dubboConfig 中
         dataBinder.bind(propertyValues);
     }
 

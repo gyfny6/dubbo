@@ -42,6 +42,7 @@ import static org.springframework.util.StringUtils.commaDelimitedListToStringArr
  * {@link ReferenceBean} Builder
  *
  * @since 2.5.7
+ * ReferenceBean的构造器
  */
 class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference, ReferenceBean> {
 
@@ -53,7 +54,7 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
     }
 
     private void configureInterface(Reference reference, ReferenceBean referenceBean) {
-
+        // 首先，从 @Reference 获得 interfaceName 属性，从而获得 interfaceClass 类
         Class<?> interfaceClass = reference.interfaceClass();
 
         if (void.class.equals(interfaceClass)) {
@@ -70,6 +71,7 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
 
         }
 
+        // 如果获得不到，则使用 interfaceClass 即可
         if (interfaceClass == null) {
             interfaceClass = this.interfaceClass;
         }
@@ -83,11 +85,11 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
 
 
     private void configureConsumerConfig(Reference reference, ReferenceBean<?> referenceBean) {
-
+        //获取@Reference的consumer属性
         String consumerBeanName = reference.consumer();
 
         ConsumerConfig consumerConfig = getOptionalBean(applicationContext, consumerBeanName, ConsumerConfig.class);
-
+        //将ConsumerConfig设置到ReferenceBean
         referenceBean.setConsumer(consumerConfig);
 
     }
@@ -102,14 +104,16 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
 
     @Override
     protected ReferenceBean doBuild() {
+        //创建ReferenceBean对象
         return new ReferenceBean<Object>();
     }
 
     @Override
     protected void preConfigureBean(Reference reference, ReferenceBean referenceBean) {
         Assert.notNull(interfaceClass, "The interface class must set first!");
+        //创建DataBinder对象
         DataBinder dataBinder = new DataBinder(referenceBean);
-        // Register CustomEditors for special fields
+        //注册指定属性的自定义Editor
         dataBinder.registerCustomEditor(String.class, "filter", new StringTrimmerEditor(true));
         dataBinder.registerCustomEditor(String.class, "listener", new StringTrimmerEditor(true));
         dataBinder.registerCustomEditor(Map.class, "parameters", new PropertyEditorSupport() {
@@ -130,7 +134,7 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
             }
         });
 
-        // Bind annotation attributes
+        //将@Reference注解的属性设置到ReferenceBean中
         dataBinder.bind(new AnnotationPropertyValuesAdapter(reference, applicationContext.getEnvironment(), IGNORE_FIELD_NAMES));
 
     }
@@ -158,15 +162,15 @@ class ReferenceBeanBuilder extends AbstractAnnotationConfigBeanBuilder<Reference
 
     @Override
     protected void postConfigureBean(Reference annotation, ReferenceBean bean) throws Exception {
-
+        //设置appilicationContext
         bean.setApplicationContext(applicationContext);
-
+        //设置interfaceClass
         configureInterface(annotation, bean);
-
+        //配置ConsumerConfig
         configureConsumerConfig(annotation, bean);
 
         configureMethodConfig(annotation, bean);
-
+        //执行Bean后置属性初始化
         bean.afterPropertiesSet();
 
     }

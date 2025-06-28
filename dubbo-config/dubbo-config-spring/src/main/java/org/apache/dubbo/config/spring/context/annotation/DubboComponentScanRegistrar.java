@@ -53,11 +53,11 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-
+        //1-获得要扫描的包
         Set<String> packagesToScan = getPackagesToScan(importingClassMetadata);
-
+        //2-创建ServiceAnnotationBeanPostProcessor Bean，后续扫描@Service注解的类，创建对应的Service Bean对象
         registerServiceAnnotationBeanPostProcessor(packagesToScan, registry);
-
+        //3-创建ReferenceAnnotationBeanPostProcessor Bean，后续扫描@Reference注解的类，创建对应的Reference Bean对象
         registerReferenceAnnotationBeanPostProcessor(registry);
 
     }
@@ -70,11 +70,14 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
      * @since 2.5.8
      */
     private void registerServiceAnnotationBeanPostProcessor(Set<String> packagesToScan, BeanDefinitionRegistry registry) {
-
+        //创建BeanDefinitionBuilder对象
         BeanDefinitionBuilder builder = rootBeanDefinition(ServiceAnnotationBeanPostProcessor.class);
+        //设置构造方法参数packagesToScan
         builder.addConstructorArgValue(packagesToScan);
+        //设置role属性
         builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
         AbstractBeanDefinition beanDefinition = builder.getBeanDefinition();
+        //注册到registry
         BeanDefinitionReaderUtils.registerWithGeneratedName(beanDefinition, registry);
 
     }
@@ -93,17 +96,19 @@ public class DubboComponentScanRegistrar implements ImportBeanDefinitionRegistra
     }
 
     private Set<String> getPackagesToScan(AnnotationMetadata metadata) {
+        //1-获取@DubboComponentScan注解的属性
         AnnotationAttributes attributes = AnnotationAttributes.fromMap(
                 metadata.getAnnotationAttributes(DubboComponentScan.class.getName()));
         String[] basePackages = attributes.getStringArray("basePackages");
         Class<?>[] basePackageClasses = attributes.getClassArray("basePackageClasses");
         String[] value = attributes.getStringArray("value");
-        // Appends value array attributes
+        //情况一，将属性添加到 packagesToScan 集合中
         Set<String> packagesToScan = new LinkedHashSet<String>(Arrays.asList(value));
         packagesToScan.addAll(Arrays.asList(basePackages));
         for (Class<?> basePackageClass : basePackageClasses) {
             packagesToScan.add(ClassUtils.getPackageName(basePackageClass));
         }
+        // 情况二，如果 packagesToScan 为空，则默认使用注解类所在的包
         if (packagesToScan.isEmpty()) {
             return Collections.singleton(ClassUtils.getPackageName(metadata.getClassName()));
         }

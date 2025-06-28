@@ -37,10 +37,12 @@ public class BeanRegistrar {
     public static void registerInfrastructureBean(BeanDefinitionRegistry beanDefinitionRegistry,
                                                   String beanName,
                                                   Class<?> beanType) {
-
+        //不存在beanName对应的BeanDefinition
         if (!beanDefinitionRegistry.containsBeanDefinition(beanName)) {
+            //设置beanClass
             RootBeanDefinition beanDefinition = new RootBeanDefinition(beanType);
             beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+            //注册到BeanDefinitionRegistry
             beanDefinitionRegistry.registerBeanDefinition(beanName, beanDefinition);
         }
 

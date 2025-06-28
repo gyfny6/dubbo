@@ -49,11 +49,6 @@ public interface DubboConfigBinder extends EnvironmentAware {
      */
     void setIgnoreInvalidFields(boolean ignoreInvalidFields);
 
-    /**
-     * Bind the properties to Dubbo Config Object under specified prefix.
-     *
-     * @param prefix
-     * @param dubboConfig
-     */
+    //绑定属性到dubboConfig中
     <C extends AbstractConfig> void bind(String prefix, C dubboConfig);
 }
