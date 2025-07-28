@@ -37,6 +37,7 @@ import java.lang.reflect.Constructor;
 
 /**
  * StubProxyFactoryWrapper
+ * 存根代理工厂包装器实现类
  */
 public class StubProxyFactoryWrapper implements ProxyFactory {
 
@@ -46,6 +47,7 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
 
     private Protocol protocol;
 
+    //Dubbo SPI Wrapper
     public StubProxyFactoryWrapper(ProxyFactory proxyFactory) {
         this.proxyFactory = proxyFactory;
     }
@@ -56,11 +58,14 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {
+        //获得Service Proxy对象
         T proxy = proxyFactory.getProxy(invoker);
+        //泛化引用的话，不支持使用本地存根
         if (GenericService.class != invoker.getInterface()) {
             String stub = invoker.getUrl().getParameter(Constants.STUB_KEY, invoker.getUrl().getParameter(Constants.LOCAL_KEY));
             if (ConfigUtils.isNotEmpty(stub)) {
                 Class<?> serviceType = invoker.getInterface();
+                //stub如果配置的true or default
                 if (ConfigUtils.isDefault(stub)) {
                     if (invoker.getUrl().hasParameter(Constants.STUB_KEY)) {
                         stub = serviceType.getName() + "Stub";
@@ -69,11 +74,13 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
                     }
                 }
                 try {
+                    //获取本地Stub类(存根类)
                     Class<?> stubClass = ReflectUtils.forName(stub);
                     if (!serviceType.isAssignableFrom(stubClass)) {
                         throw new IllegalStateException("The stub implementation class " + stubClass.getName() + " not implement interface " + serviceType.getName());
                     }
                     try {
+                        //创建Stub对象，使用带只有serviceType的构造方法
                         Constructor<?> constructor = ReflectUtils.findConstructor(stubClass, serviceType);
                         proxy = (T) constructor.newInstance(new Object[]{proxy});
                         //export stub service
@@ -99,6 +106,9 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
         return proxy;
     }
 
+    /**
+     * 这个没用，因为provider不支持存根
+     */
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) throws RpcException {
         return proxyFactory.getInvoker(proxy, type, url);
     }

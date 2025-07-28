@@ -32,6 +32,7 @@ public class JdkProxyFactory extends AbstractProxyFactory {
 
     @SuppressWarnings("unchecked")
     public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
+        //创建代理对象
         return (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), interfaces, new InvokerInvocationHandler(invoker));
     }
 
@@ -41,7 +42,9 @@ public class JdkProxyFactory extends AbstractProxyFactory {
             protected Object doInvoke(T proxy, String methodName,
                                       Class<?>[] parameterTypes,
                                       Object[] arguments) throws Throwable {
+                //获得方法
                 Method method = proxy.getClass().getMethod(methodName, parameterTypes);
+                //调用方法
                 return method.invoke(proxy, arguments);
             }
         };
